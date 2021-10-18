@@ -13,22 +13,24 @@ import logging
 import random
 import time
 from bs4 import BeautifulSoup
+from configparser import ConfigParser
 
 print("Starting configuration\n")
+config_parser = ConfigParser('config.ini')
 
 Happy_Responses_Filename = "happy_responses.txt"
 Sad_Responses_Filename = "sad_responses.txt"
 # Extra_Responses_Filename="extra.txt"
-app_id = "b7e63fea"
-app_key = "b788c7faae8a903585bc41a11743acca"
-language = "en-gb"
+app_id = config_parser.get('oxford','app_id')
+app_key = config_parser.get('oxford','app_key')
+language = config_parser.get('oxford','language')
 
 reddit = praw.Reddit(
-    client_id="<client_id>",
-    client_secret="<client_secret>",
-    user_agent="Shashi test v0.2",
-    username="Shaashiii",
-    password="<password>",
+    client_id=config_parser.get('reddit','client_id'),
+    client_secret=config_parser.get('reddit','client_secret'),
+    user_agent=config_parser.get('reddit','user_agent'),
+    username=config_parser.get('reddit','username'),
+    password=config_parser.get('reddit','password'),
 )
 
 logging.basicConfig(
