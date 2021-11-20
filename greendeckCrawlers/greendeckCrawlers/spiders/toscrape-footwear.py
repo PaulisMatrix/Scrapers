@@ -34,6 +34,18 @@ class ToScrapeSpiderXPath(scrapy.Spider):
                 logging.debug(f"Fault Product_item:{i}")
             
 	    yield item
+		
+'''
+Note : I couldn't find the sales_price on the website,only original_price was listed for each product. 
+I believe sale wasn't going on that moment. So I generated a random sales_price between the given range
+as you see above. I even mailed this query to the careers@greendeck.com but got no response so decided 
+to go ahead with it. 
+
+Also, for some products img_url is not getting extracted cause of addition of extra divs on the website.
+So I have marked them as None in the database. We can discuss this issue and my approach more 
+clearly perhaps in the interview. 
+
+'''
 
 
 
