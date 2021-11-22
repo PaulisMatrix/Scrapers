@@ -26,11 +26,11 @@ ITEM_PIPELINES = {
     'greendeckCrawlers.pipelines.GreendeckcrawlersPipeline': 300,
 }
 
-MONGO_URI = 'mongodb+srv://Rushikesh_Yadwade:greendeck@cluster0.rbv3s.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-MONGO_DATABASE = 'RushikeshYadwade'
-MONGODB_COLLECTION = 'flipkart'
-MONGO_USERNAME = "Rushikesh_Yadwade"
-MONGO_PASSWORD = 'greendeck'
+MONGO_URI = '<mongo_uri>'
+MONGO_DATABASE = '<Database_Name>'
+MONGODB_COLLECTION = '<Collection_Name>'
+MONGO_USERNAME = "<Username>"
+MONGO_PASSWORD = '<Password>'
 
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
