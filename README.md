@@ -20,7 +20,7 @@ The bot returns the defintion,type of the word(noun/pronoun/adjective/verb) and 
 on a successful lookup else "Not found" message incase word is not found.
 
 Example :
-shashi exlpain mitigation
+shashi exlpain mitigation or !explain mitigation
 
 Response:
 According to the Oxford dictionary:
@@ -32,5 +32,3 @@ Word Type: noun.
 Meaning: the action of reducing the severity,seriousness, or painfulness of something.
 
 Example: the identification and mitigation of pollution.
-
-
