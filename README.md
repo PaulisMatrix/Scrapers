@@ -19,7 +19,7 @@ second lookup is the urban dictionary which I have scrapped using beautiful soup
 The bot returns the defintion,type of the word(noun/pronoun/adjective/verb) and an example 
 on a successful lookup else "Not found" message incase word is not found.
 
-Example :
+Example trigger call :
 shashi exlpain mitigation or !explain mitigation
 
 Response:
