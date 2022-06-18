@@ -8,29 +8,31 @@ import sys
 import pdb
 import praw
 import sys
-from datetime import datetime, timedelta
 import logging
 import random
 import time
 from bs4 import BeautifulSoup
-from configparser import ConfigParser
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
-print("Starting configuration\n")
-config_parser = ConfigParser('config.ini')
+# to load the env variables
+load_dotenv()
 
-Happy_Responses_Filename = "happy_responses.txt"
-Sad_Responses_Filename = "sad_responses.txt"
-# Extra_Responses_Filename="extra.txt"
-app_id = config_parser.get('oxford','app_id')
-app_key = config_parser.get('oxford','app_key')
-language = config_parser.get('oxford','language')
+happy_responses_filename = "happy_responses.txt"
+sad_responses_filename = "sad_responses.txt"
 
+# OXFORD DICTIONARY SETTINGs
+app_id = os.getenv("oxford_app_id")
+app_key = os.getenv("oxford_app_key")
+language = os.getenv("oxford_lang")
+
+# REDDIT SETTINGS
 reddit = praw.Reddit(
-    client_id=config_parser.get('reddit','client_id'),
-    client_secret=config_parser.get('reddit','client_secret'),
-    user_agent=config_parser.get('reddit','user_agent'),
-    username=config_parser.get('reddit','username'),
-    password=config_parser.get('reddit','password'),
+    client_id=os.getenv("reddit_client_id"),
+    client_secret=os.getenv("reddit_client_secret"),
+    user_agent=os.getenv("reddit_useragent"),
+    username=os.getenv("reddit_username"),
+    password=os.getenv("reddit_password"),
 )
 
 logging.basicConfig(
@@ -41,26 +43,20 @@ logging.basicConfig(
 )
 
 try:
-    with open(Happy_Responses_Filename, encoding="utf8") as f:
+    with open(happy_responses_filename, encoding="utf8") as f:
         happy_responses = f.read().split("\n")
 except FileNotFoundError:
     happy_responses = [":^)"]
 
 try:
-    with open(Sad_Responses_Filename, encoding="utf8") as f:
+    with open(sad_responses_filename, encoding="utf8") as f:
         sad_responses = f.read().split("\n")
 except FileNotFoundError:
     sad_responses = [":("]
 
-"""    
-try:
-    with open(Extra_Responses_Filename,encoding='utf8') as f:
-        extra_responses=f.read().split("\n")
-except FileNotFoundError:
-    extra_responses=['Well,fuck']
-"""
 
-replied_to = {}  # dictionary to store author and corresponding timestamp
+# dictionary to store author and corresponding timestamp
+replied_to = {}
 
 
 def restrict_user_spam():
@@ -95,7 +91,9 @@ def check_inbox():
 
 def search_comment(comment):
     comment_body = comment.body.lower()
-    word = comment_body[comment_body.find("shashi explain") :].split(" ")[2]  # the word after shashi explain
+    word = comment_body[comment_body.find("shashi explain") :].split(" ")[
+        2
+    ]  # the word after shashi explain
     print(f"Searching for {word}")
     try:
         user_word, user_meaning, user_example = word_lookup1(word)  # call oxford api
@@ -162,8 +160,12 @@ def word_lookup1(word_id):
     json_data = json.loads(r.text)
 
     word = json_data["results"][0]["lexicalEntries"][0]["lexicalCategory"]["id"]
-    meaning = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]["definitions"][0]
-    example = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]["examples"][0]["text"]
+    meaning = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0][
+        "definitions"
+    ][0]
+    example = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0][
+        "examples"
+    ][0]["text"]
     return word, meaning, example
 
 

@@ -1,34 +1,18 @@
-This is a dictionary bot created for displaying the meaning of a word when called by a specific command on the mentioned subreddit on Reddit website.
-
-For creating this bot I have used the following:
-1. PRAW (Python Reddit API Wrapper)
-2. requests
-3. Beautiful soup for webscrapping 
-4. schedule for scheduling the bot
-5. re for regex matching and much more...
+## Dump of my python scripts 
 
 
+<br>
 
-The syntax for triggering the bot is :
-shashi explain <your word> or !define <your word>
+1. **Greendeck Crawlers**:
 
-I have implemented two word lookups.
-First is the call to the oxford dictionary api and if the word is not found there then
-second lookup is the urban dictionary which I have scrapped using beautiful soup.
+    a. Scraping an e-commerce webiste and storing the scraped details in a mongo db collection.
 
-The bot returns the defintion,type of the word(noun/pronoun/adjective/verb) and an example 
-on a successful lookup else "Not found" message incase word is not found.
+    b. Used Scrapy framework for the same. 
 
-Example trigger call :
-shashi exlpain mitigation or !explain mitigation
+    c. Go through its README for implementation details.
 
-Response:
-According to the Oxford dictionary:
+2. **Reddit Dictionary Bot**:
 
-Your Word: mitigation.
+    a. A simple reddit bot which responds with a meaning of a word requested by the user.
 
-Word Type: noun.
-
-Meaning: the action of reducing the severity,seriousness, or painfulness of something.
-
-Example: the identification and mitigation of pollution.
+    b. Go through its README for implementation details.
