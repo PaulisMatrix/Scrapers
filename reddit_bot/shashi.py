@@ -14,6 +14,7 @@ import time
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from lxml import etree
 
 # to load the env variables
 load_dotenv()
@@ -72,7 +73,7 @@ def restrict_user_spam():
 def reply_random(comment, responses):
     reply_string = random.choice(responses).encode("utf8")
     comment.upvote()
-    comment.reply(reply_string)
+    comment.reply(body=reply_string)
     logging.info("Replied to u/%s with %s" % (comment.author, reply_string))
 
 
@@ -89,14 +90,15 @@ def check_inbox():
     # print("Handled Replies\n")
 
 
-def search_comment(comment):
-    comment_body = comment.body.lower()
-    word = comment_body[comment_body.find("shashi explain") :].split(" ")[
-        2
-    ]  # the word after shashi explain
-    print(f"Searching for {word}")
+def search_comment(comment_body):
+    if "shashi explain" in comment_body:
+        word = comment_body[comment_body.find("shashi explain") :].split(" ")[2]
+    else:
+        word = comment_body[comment_body.find("!explain") :].split(" ")[1]
+    print(f"\nSearching for {word}\n")
     try:
-        user_word, user_meaning, user_example = word_lookup1(word)  # call oxford api
+        # first lookup oxford api
+        user_word, user_meaning, user_example = word_lookup1(word)
         reply_string = (
             "According to Oxford dictionary:\n\n"
             + "**Your Word**: "
@@ -111,17 +113,15 @@ def search_comment(comment):
         )
         if "not found" not in user_example.lower():
             reply_string += "**Example**: " + str(user_example) + "\n"
-        comment.reply(reply_string)
+        comment.reply(body=reply_string)
         replied_to[comment.author] = datetime.now()
     except Exception as oxford_exception:
-        print(oxford_exception)
-        user_meaning, user_example = word_lookup2(word)  # search in the urban dict
-        if (
-            user_meaning == "Definition Not Found"
-            and user_example == "Example Not Found"
-        ):
-            print("Word Not Found\n")
-            comment.reply(f"{word} Not Found!")
+        print(f"\nOxford didn't find the word. Raised exception {oxford_exception}\n")
+        # second lookup in urban dictionary
+        user_meaning, user_example = word_lookup2(word)
+        if ( user_meaning == "Definition Not Found" and user_example == "Example Not Found" ):
+            print("\nWord Not Found\n")
+            comment.reply(body=f"{word} Not Found!")
             replied_to[comment.author] = datetime.now()
         else:
             reply_string = "According to Urban dictionary:\n\n"
@@ -144,12 +144,10 @@ def search_comment(comment):
                     + "**Example**: "
                     + str(user_example)
                 )
-            comment.reply(reply_string)
+            comment.reply(body=reply_string)
             replied_to[comment.author] = datetime.now()
 
-
 def word_lookup1(word_id):
-    # import pdb; pdb.set_trace()
     url = (
         "https://od-api.oxforddictionaries.com:443/api/v2/entries/"
         + language
@@ -160,52 +158,44 @@ def word_lookup1(word_id):
     json_data = json.loads(r.text)
 
     word = json_data["results"][0]["lexicalEntries"][0]["lexicalCategory"]["id"]
-    meaning = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0][
-        "definitions"
-    ][0]
-    example = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0][
-        "examples"
-    ][0]["text"]
+    meaning = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]["definitions"][0]
+    example = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]["examples"][0]["text"]
     return word, meaning, example
 
+def soup_it(source,class_name):
+    soup = BeautifulSoup(source, "lxml")
+    section = soup.find("div",class_=class_name)
+    return section.text
 
-def lineBreaks(defin):
-    string = ""
-    ignore = False
-    for x in range(0, len(defin) - 4):
-        if defin[x] == "<":
-            ignore = True
-        if ignore == False:
-            string += defin[x]
-        if (
-            defin[x] + defin[x + 1] + defin[x + 2] + defin[x + 3] + defin[x + 4]
-            == "<br/>"
-        ):
-            string += "\n"
-        if defin[x] == ">":
-            ignore = False
-    return string
+def cleaning(xpath_def,xpath_ex,tree):
+    defin = tree.xpath(xpath_def)
+    ex = tree.xpath(xpath_ex)
+
+    get_def = soup_it(etree.tostring(defin[0]).decode('utf-8'),"meaning mb-4")
+    get_ex = soup_it(etree.tostring(ex[0]).decode('utf-8'),'example italic mb-4')
+
+    return get_def,get_ex
 
 
 def word_lookup2(word):
     website = "https://www.urbandictionary.com/define.php?term=" + word
-
     try:
-        source = requests.get(website).text
-        soup = BeautifulSoup(source, "lxml")
-        section = soup.find("div", class_="def-panel")
-        definition = section.find("div", class_="meaning")
-        example = section.find("div", class_="example")
-        string1 = lineBreaks(str(definition))
-        string2 = lineBreaks(str(example))
-        return string1.strip(), string2.strip()
-    except AttributeError as KE:
-        print(KE)
+        page = requests.get(website)
+        tree = etree.HTML(page.text)
+        word = tree.xpath('//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[1]/h1/a/text()')[0]
+        xpath_def = '//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[2]'
+        xpath_ex = '//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[3]'
+        definition,example = cleaning(xpath_def,xpath_ex,tree)
+        return definition,example
+    
+    except Exception as e:
+        print(f"\nUrban dictionary raised {e}\n")
         return "Definition Not Found", "Example Not Found"
 
-
-schedule.every(5).seconds.do(check_inbox)  # check inbox every 30 seconds
-schedule.every(5).seconds.do(restrict_user_spam)  # to avoid spamming
+# check inbox every 30 seconds
+schedule.every(10).seconds.do(check_inbox)  
+# to avoid spamming
+schedule.every(5).seconds.do(restrict_user_spam) 
 
 # comment_stream=reddit.subreddit("GumTest").stream.comments
 subreddit = reddit.subreddit("GumTest")
@@ -215,13 +205,14 @@ print("Starting the stream loop...\n")
 while True:
     try:
         for comment in subreddit.stream.comments(skip_existing=True):
-            # print(comment.body,comment.author)
+            #print(comment.body,comment.author)
             schedule.run_pending()
             if comment.author not in replied_to:
-                if "shashi explain" in comment.body.lower():
+                comment_body = comment.body.lower()
+                if "shashi explain" in comment_body or "!explain" in comment_body:
                     comment.upvote()
                     # print(comment.body)
-                    search_comment(comment)
+                    search_comment(comment_body)
     except praw.exceptions.APIException as e:
         logging.warn(str(e))
         logging.warn("Rate Limit Exceeded. Sleeping for a minute.")
