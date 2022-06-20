@@ -78,7 +78,6 @@ def reply_random(comment, responses):
 
 
 def check_inbox():
-    # print("Checking inbox....\n")
     for user_reply in reddit.inbox.unread(limit=None):
         if isinstance(user_reply, praw.models.Comment):
             print(user_reply.author)
@@ -87,15 +86,13 @@ def check_inbox():
             elif re.search("bad", user_reply.body.lower(), re.IGNORECASE):
                 reply_random(user_reply, sad_responses)
         user_reply.mark_read()
-    # print("Handled Replies\n")
-
 
 def search_comment(comment_body):
     if "shashi explain" in comment_body:
         word = comment_body[comment_body.find("shashi explain") :].split(" ")[2]
     else:
         word = comment_body[comment_body.find("!explain") :].split(" ")[1]
-    print(f"\nSearching for {word}\n")
+    logging.info(f"Searching for {word}")
     try:
         # first lookup oxford api
         user_word, user_meaning, user_example = word_lookup1(word)
@@ -116,11 +113,10 @@ def search_comment(comment_body):
         comment.reply(body=reply_string)
         replied_to[comment.author] = datetime.now()
     except Exception as oxford_exception:
-        print(f"\nOxford didn't find the word. Raised exception {oxford_exception}\n")
+        logging.warn(f"Oxford didn't find the word. Raised exception {oxford_exception}")
         # second lookup in urban dictionary
         user_meaning, user_example = word_lookup2(word)
         if ( user_meaning == "Definition Not Found" and user_example == "Example Not Found" ):
-            print("\nWord Not Found\n")
             comment.reply(body=f"{word} Not Found!")
             replied_to[comment.author] = datetime.now()
         else:
@@ -180,12 +176,11 @@ def cleaning(xpath_def,xpath_ex,tree):
 def word_lookup2(word):
     website = "https://www.urbandictionary.com/define.php?term=" + word
     try:
-        page = requests.get(website)
-        tree = etree.HTML(page.text)
+        page = requests.get(website).text
+        soup = BeautifulSoup(page, "lxml")
+        tree = etree.HTML(page)
         word = tree.xpath('//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[1]/h1/a/text()')[0]
-        xpath_def = '//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[2]'
-        xpath_ex = '//*[@id="ud-root"]/main/div/div[2]/section/div[1]/div/div[3]'
-        definition,example = cleaning(xpath_def,xpath_ex,tree)
+        definition,example = soup.find("div",class_="meaning mb-4").text, soup.find("div",class_="example italic mb-4").text
         return definition,example
     
     except Exception as e:
@@ -200,7 +195,7 @@ schedule.every(5).seconds.do(restrict_user_spam)
 # comment_stream=reddit.subreddit("GumTest").stream.comments
 subreddit = reddit.subreddit("GumTest")
 
-print("Starting the stream loop...\n")
+logging.info("Starting the stream loop.....")
 
 while True:
     try:
