@@ -158,21 +158,6 @@ def word_lookup1(word_id):
     example = json_data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]["examples"][0]["text"]
     return word, meaning, example
 
-def soup_it(source,class_name):
-    soup = BeautifulSoup(source, "lxml")
-    section = soup.find("div",class_=class_name)
-    return section.text
-
-def cleaning(xpath_def,xpath_ex,tree):
-    defin = tree.xpath(xpath_def)
-    ex = tree.xpath(xpath_ex)
-
-    get_def = soup_it(etree.tostring(defin[0]).decode('utf-8'),"meaning mb-4")
-    get_ex = soup_it(etree.tostring(ex[0]).decode('utf-8'),'example italic mb-4')
-
-    return get_def,get_ex
-
-
 def word_lookup2(word):
     website = "https://www.urbandictionary.com/define.php?term=" + word
     try:
