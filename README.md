@@ -34,3 +34,5 @@
         pre-commit installed at .git/hooks/pre-commit
 
     e. Make code changes and on every commit, the pre-COMMMIT hook will run.
+
+    f. Bypass or disable the pre-commit hook: `git commit --no-verify -m "commit message"`
